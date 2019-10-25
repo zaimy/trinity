@@ -11,7 +11,7 @@ import (
 // ListWorkflows lists dags on definition.
 func ListWorkflows(src string) (mapset.Set, error) {
 	workflowNames := mapset.NewSet()
-	files, _ := filepath.Glob(fmt.Sprintf("%s/*/.trinity", src))
+	files, _ := filepath.Glob(fmt.Sprintf("%s/*/.trinity", src)) // TODO: Consider Windows file paths
 	for _, f := range files {
 		rep := regexp.MustCompile(`\s*/\s*`)
 		result := rep.Split(f, -1)

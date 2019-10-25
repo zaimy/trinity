@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -12,7 +11,7 @@ import (
 )
 
 // ListWorkflows lists dags on Cloud Storage.
-func ListWorkflows(bucketName string, src string) (mapset.Set, error) {
+func ListWorkflows(bucketName string) (mapset.Set, error) {
 	ctx := context.Background()
 	client, err := cloudStorage.NewClient(ctx)
 	if err != nil {
@@ -20,7 +19,7 @@ func ListWorkflows(bucketName string, src string) (mapset.Set, error) {
 	}
 
 	workflowNames := mapset.NewSet()
-	it := client.Bucket(bucketName).Objects(ctx, &cloudStorage.Query{Prefix: fmt.Sprintf("%s/", src)})
+	it := client.Bucket(bucketName).Objects(ctx, &cloudStorage.Query{Prefix: "dags/"})
 	for {
 		attrs, err := it.Next()
 		if err == iterator.Done {

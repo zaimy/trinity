@@ -7,8 +7,7 @@ A tool to synchronize workflows (DAGs) between Codebase, Cloud Storage and Airfl
 ```sh
 $ export GOOGLE_APPLICATION_CREDENTIALS="[PATH]" # https://cloud.google.com/storage/docs/reference/libraries#setting_up_authentication
 $ cd PATH_TO_YOUR_CODEBASE
-$ trinity --bucket=BUCKET_NAME \
-    --composer-env=COMPOSER_ENV_NAME
+$ trinity --src=DAGS_DIRECTORY --bucket=BUCKET_NAME --composer-env=COMPOSER_ENV_NAME
 ```
 
 **Note:**
@@ -28,7 +27,7 @@ trinity synchronizes the workflows (DAGs) with the codebase as master.
 
 ```
 Some Codebase
-└ dags
+└ Some directory
 　 ├ workflowA
 　 │ ├ main.py
 　 │ ├ foo.sql
@@ -39,7 +38,7 @@ Some Codebase
 　 　 └ .trinity
 ```
 
-trinity assumes a directory structure in which subdirectories exist for each workflow under the dags directory.
+trinity assumes a directory structure in which subdirectories exist for each workflow.
 
 ## Installation
 

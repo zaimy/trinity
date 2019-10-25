@@ -9,14 +9,14 @@ import (
 )
 
 // RemoveWorkflow removes a dag from Cloud Storage.
-func RemoveWorkflow(bucket string, src string, workflow string) error {
+func RemoveWorkflow(bucket string, workflow string) error {
 	ctx := context.Background()
 	client, err := cloudStorage.NewClient(ctx)
 	if err != nil {
 		return err
 	}
 
-	workflowPath := filepath.Join(src, workflow)
+	workflowPath := filepath.Join("dags", workflow)
 	it := client.Bucket(bucket).Objects(ctx, &cloudStorage.Query{Prefix: workflowPath})
 	for {
 		attrs, err := it.Next()

@@ -33,7 +33,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		log.Fatal(err)
 	}
 
-	cloudStorageWorkflows, err := storage.ListWorkflows(bucket, src)
+	cloudStorageWorkflows, err := storage.ListWorkflows(bucket)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 	it = d.Iterator()
 	for w := range it.C {
 		// Remove from storage
-		if err := storage.RemoveWorkflow(bucket, src, fmt.Sprintf("%v", w)); err != nil {
+		if err := storage.RemoveWorkflow(bucket, fmt.Sprintf("%v", w)); err != nil {
 			log.Fatal(err)
 		}
 
@@ -76,7 +76,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 			log.Fatal(err)
 		}
 
-		storageHash, err := storage.GetHash(bucket, src, fmt.Sprintf("%v", w))
+		storageHash, err := storage.GetHash(bucket, fmt.Sprintf("%v", w))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -85,7 +85,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 			// Do nothing
 		} else {
 			// Remove from storage
-			if err := storage.RemoveWorkflow(bucket, src, fmt.Sprintf("%v", w)); err != nil {
+			if err := storage.RemoveWorkflow(bucket, fmt.Sprintf("%v", w)); err != nil {
 				log.Fatal(err)
 			}
 

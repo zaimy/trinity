@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	cloudStorage "cloud.google.com/go/storage"
 )
@@ -19,15 +20,16 @@ func UploadWorkflow(bucket string, src string, workflow string) error {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	workflowPath := filepath.Join(src, workflow)
-	err = filepath.Walk(workflowPath, func(path string, info os.FileInfo, err error) error {
+	definitionWorkflowPath := filepath.Join(src, workflow)
+	err = filepath.Walk(definitionWorkflowPath, func(definitionPath string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
 
-		fmt.Fprintln(os.Stdout, path)
-		wc := client.Bucket(bucket).Object(path).NewWriter(ctx)
-		f, err := os.Open(path)
+		fmt.Fprintln(os.Stdout, definitionPath)
+		storagePath := strings.Replace(definitionPath, src, "dags", 1)
+		wc := client.Bucket(bucket).Object(storagePath).NewWriter(ctx)
+		f, err := os.Open(definitionPath)
 		if err != nil {
 			return err
 		}

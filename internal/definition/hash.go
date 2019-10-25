@@ -55,12 +55,12 @@ func hashing(src string) ([]byte, error) {
 
 	if err := taring(src, &buf); err != nil {
 		return nil, err
-	} else {
-		h := sha1.New()
-		h.Write(buf.Bytes())
-		bs := h.Sum(nil)
-		return bs, nil
 	}
+
+	h := sha1.New()
+	h.Write(buf.Bytes())
+	bs := h.Sum(nil)
+	return bs, nil
 }
 
 func taring(src string, buf *bytes.Buffer) error {

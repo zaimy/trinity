@@ -8,7 +8,7 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-// RemoveWorkflows removes a dag from Cloud Storage.
+// RemoveWorkflow removes a dag from Cloud Storage.
 func RemoveWorkflow(bucket string, src string, workflow string) error {
 	ctx := context.Background()
 	client, err := cloudStorage.NewClient(ctx)

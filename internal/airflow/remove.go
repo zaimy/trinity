@@ -5,6 +5,7 @@ import (
 	"os/exec"
 )
 
+// RemoveWorkflow removes a dag from Airflow metadata.
 func RemoveWorkflow(composerEnv string, composerLocation string, workflow string) error {
 	if _, err := exec.LookPath("gcloud"); err != nil {
 		return err

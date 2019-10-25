@@ -3,20 +3,21 @@ package trinity
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
+
 	"github.com/zaimy/trinity/internal/airflow"
 	"github.com/zaimy/trinity/internal/definition"
 	"github.com/zaimy/trinity/internal/storage"
-	"io"
-	"log"
 )
 
 // Run runs the trinity.
 func Run(args []string, outStream, errStream io.Writer) error {
 	fs := flag.NewFlagSet("trinity", flag.ContinueOnError)
 	var (
-		src string
-		bucket string
-		composerEnv string
+		src              string
+		bucket           string
+		composerEnv      string
 		composerLocation string
 	)
 	fs.StringVar(&src, "src", "dags", "dags directory")
@@ -41,7 +42,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		log.Fatal(err)
 	}
 
-	// Exists only definition.
+	// Exists only definition
 	d := localStorageWorkflows.Difference(cloudStorageWorkflows)
 	it := d.Iterator()
 	for w := range it.C {
@@ -50,7 +51,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		}
 	}
 
-	// Exists only storage.
+	// Exists only storage
 	d = cloudStorageWorkflows.Difference(localStorageWorkflows)
 	it = d.Iterator()
 	for w := range it.C {
@@ -65,7 +66,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		}
 	}
 
-	// Exists in both.
+	// Exists in both
 	d = cloudStorageWorkflows.Intersect(localStorageWorkflows)
 	it = d.Iterator()
 	for w := range it.C {
@@ -81,7 +82,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		}
 
 		if definitionHash == storageHash {
-			// Do nothing.
+			// Do nothing
 		} else {
 			// Remove from storage
 			if err := storage.RemoveWorkflow(bucket, src, fmt.Sprintf("%v", w)); err != nil {

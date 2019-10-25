@@ -2,14 +2,16 @@ package storage
 
 import (
 	"context"
-	"log"
-	"path/filepath"
-	"os"
 	"fmt"
 	"io"
+	"log"
+	"os"
+	"path/filepath"
+
 	cloudStorage "cloud.google.com/go/storage"
 )
 
+// UploadWorkflow uploads a dag to Cloud Storage.
 func UploadWorkflow(bucket string, src string, workflow string) error {
 	ctx := context.Background()
 	client, err := cloudStorage.NewClient(ctx)
@@ -27,15 +29,15 @@ func UploadWorkflow(bucket string, src string, workflow string) error {
 		wc := client.Bucket(bucket).Object(path).NewWriter(ctx)
 		f, err := os.Open(path)
 		if err != nil {
-						return err
+			return err
 		}
 		defer f.Close()
 
 		if _, err = io.Copy(wc, f); err != nil {
-						return err
+			return err
 		}
 		if err := wc.Close(); err != nil {
-						return err
+			return err
 		}
 
 		return nil

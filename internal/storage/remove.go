@@ -2,12 +2,13 @@ package storage
 
 import (
 	"context"
+	"path/filepath"
+
 	cloudStorage "cloud.google.com/go/storage"
 	"google.golang.org/api/iterator"
-
-	"path/filepath"
 )
 
+// RemoveWorkflows removes a dag from Cloud Storage.
 func RemoveWorkflow(bucket string, src string, workflow string) error {
 	ctx := context.Background()
 	client, err := cloudStorage.NewClient(ctx)
@@ -28,7 +29,7 @@ func RemoveWorkflow(bucket string, src string, workflow string) error {
 
 		o := client.Bucket(bucket).Object(attrs.Name)
 		if err := o.Delete(ctx); err != nil {
-						return err
+			return err
 		}
 	}
 

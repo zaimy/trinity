@@ -11,14 +11,16 @@ import (
 	"path/filepath"
 )
 
+// GetHash gets a hash string of a dag from definition.
 func GetHash(src string, workflow string) (string, error) {
 	h, err := ioutil.ReadFile(filepath.Join(src, workflow, ".trinity"))
 	if err != nil {
-			return "", err
+		return "", err
 	}
 	return string(h), nil
 }
 
+// SaveHash saves hash value to definition.
 func SaveHash(src string) error {
 	fis, err := ioutil.ReadDir(src)
 	if err != nil {
@@ -27,7 +29,7 @@ func SaveHash(src string) error {
 
 	for _, fi := range fis {
 		if fi.IsDir() {
-			h, err := Hash(filepath.Join(src, fi.Name()))
+			h, err := hashing(filepath.Join(src, fi.Name()))
 			if err != nil {
 				return err
 			}
@@ -48,10 +50,10 @@ func SaveHash(src string) error {
 	return nil
 }
 
-func Hash(src string) ([]byte, error) {
+func hashing(src string) ([]byte, error) {
 	var buf bytes.Buffer
 
-	if err := Tar(src, &buf); err != nil {
+	if err := taring(src, &buf); err != nil {
 		return nil, err
 	} else {
 		h := sha1.New()
@@ -61,7 +63,7 @@ func Hash(src string) ([]byte, error) {
 	}
 }
 
-func Tar(src string, buf *bytes.Buffer) error {
+func taring(src string, buf *bytes.Buffer) error {
 	if _, err := os.Stat(src); err != nil {
 		return fmt.Errorf("%v", err.Error())
 	}

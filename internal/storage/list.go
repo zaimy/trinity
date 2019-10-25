@@ -6,12 +6,12 @@ import (
 	"log"
 	"regexp"
 
+	cloudStorage "cloud.google.com/go/storage"
 	mapset "github.com/deckarep/golang-set"
 	"google.golang.org/api/iterator"
-
-	cloudStorage "cloud.google.com/go/storage"
 )
 
+// ListWorkflows lists dags on Cloud Storage.
 func ListWorkflows(bucketName string, src string) (mapset.Set, error) {
 	ctx := context.Background()
 	client, err := cloudStorage.NewClient(ctx)

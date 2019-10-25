@@ -8,6 +8,7 @@ import (
 	mapset "github.com/deckarep/golang-set"
 )
 
+// ListWorkflows lists dags on definition.
 func ListWorkflows(src string) (mapset.Set, error) {
 	workflowNames := mapset.NewSet()
 	files, _ := filepath.Glob(fmt.Sprintf("%s/*/.trinity", src))

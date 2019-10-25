@@ -25,7 +25,7 @@ trinity synchronizes the workflows (DAGs) with the codebase as master.
 
 ## Directory Stracture
 
-```
+```txt
 Some Codebase
 └ Some directory
 　 ├ workflowA

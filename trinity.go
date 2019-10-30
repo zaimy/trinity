@@ -46,6 +46,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 	d := localStorageWorkflows.Difference(cloudStorageWorkflows)
 	it := d.Iterator()
 	for w := range it.C {
+		log.Printf("Add Workflow: %s", w)
 		if err := storage.UploadWorkflow(bucket, src, fmt.Sprintf("%v", w)); err != nil {
 			log.Fatal(err)
 		}
@@ -55,6 +56,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 	d = cloudStorageWorkflows.Difference(localStorageWorkflows)
 	it = d.Iterator()
 	for w := range it.C {
+		log.Printf("Remove Workflow: %v", w)
 		// Remove from storage
 		if err := storage.RemoveWorkflow(bucket, fmt.Sprintf("%v", w)); err != nil {
 			log.Fatal(err)
@@ -84,6 +86,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		if definitionHash == storageHash {
 			// Do nothing
 		} else {
+			log.Printf("Update Workflow: %v", w)
 			// Remove from storage
 			if err := storage.RemoveWorkflow(bucket, fmt.Sprintf("%v", w)); err != nil {
 				log.Fatal(err)

@@ -26,19 +26,15 @@ trinity synchronizes the workflows (DAGs) with the codebase as master.
 ## Directory Stracture
 
 ```txt
-Some Codebase
-└ Some directory
-　 ├ workflowA
-　 │ ├ main.py
-　 │ ├ foo.sql
-　 │ └ .trinity
-　 └ workflowB
-　 　 ├ main.py
-　 　 ├ bar.ini
-　 　 └ .trinity
+root
+└ dags-directory
+　 ├ some-workflow.py
+　 ├ some-workflow
+　 │ └ requirement-files
+　 └ some-workflow.trinity
 ```
 
-trinity assumes a directory structure in which subdirectories exist for each workflow.
+trinity assumes a structure in which a .py file representing each workflow exists directly under the dags directory.
 
 ## Installation
 

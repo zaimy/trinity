@@ -10,8 +10,9 @@ import (
 
 // RemoveWorkflow removes a dag from Cloud Storage.
 func RemoveWorkflow(bucket string, workflow string) error {
-	removeBlobs(bucket, fmt.Sprintf("dags/%s.py", workflow))
 	removeBlobs(bucket, fmt.Sprintf("dags/%s/", workflow))
+	removeBlobs(bucket, fmt.Sprintf("dags/%s.py", workflow))
+	removeBlobs(bucket, fmt.Sprintf("dags/%s.trinity", workflow))
 
 	return nil
 }

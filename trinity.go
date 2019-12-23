@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
+
+	mapset "github.com/deckarep/golang-set"
 
 	"github.com/zaimy/trinity/internal/airflow"
 	"github.com/zaimy/trinity/internal/definition"
@@ -30,6 +33,8 @@ func Run(args []string, outStream, errStream io.Writer) error {
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
+
+	updatedWorkflows := mapset.NewSet()
 
 	log.Print("------------------ 01. Save hash values representing workflows ------------------")
 	if err := definition.OverwriteAllWorkflowHashes(src); err != nil {
@@ -57,6 +62,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		if err := storage.UploadWorkflow(gcsBucket, gcsDagDirectory, src, fmt.Sprintf("%v", w)); err != nil {
 			log.Fatal(err)
 		}
+		updatedWorkflows.Add(w)
 	}
 
 	// Exists only storage
@@ -104,7 +110,13 @@ func Run(args []string, outStream, errStream io.Writer) error {
 			if err = storage.UploadWorkflow(gcsBucket, gcsDagDirectory, src, fmt.Sprintf("%v", w)); err != nil {
 				log.Fatal(err)
 			}
+			updatedWorkflows.Add(w)
 		}
+	}
+
+	it = updatedWorkflows.Iterator()
+	for w := range it.C {
+		fmt.Fprintln(os.Stdout, w)
 	}
 
 	return nil

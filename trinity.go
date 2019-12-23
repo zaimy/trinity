@@ -23,12 +23,14 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		gcsBucket        string
 		composerEnv      string
 		composerLocation string
+		removeOnlyGcs    bool
 	)
 	fs.StringVar(&src, "src", "dags", "dags directory")
 	fs.StringVar(&gcsBucket, "gcs-bucket", "", "Cloud Storage bucket name")
 	fs.StringVar(&gcsDagDirectory, "gcs-dag-directory", "dags", "Cloud Storage DAG directory")
 	fs.StringVar(&composerEnv, "composer-env", "", "Cloud Composer environment name")
 	fs.StringVar(&composerLocation, "composer-location", "us-central1", "Cloud Composer environment location")
+	fs.BoolVar(&removeOnlyGcs, "remove-only-gcs", false, "Manage only Cloud Storage")
 	fs.SetOutput(errStream)
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -75,9 +77,11 @@ func Run(args []string, outStream, errStream io.Writer) error {
 			log.Fatal(err)
 		}
 
-		// Remove from airflow
-		if err = airflow.RemoveWorkflow(composerEnv, composerLocation, fmt.Sprintf("%v", w)); err != nil {
-			log.Fatal(err)
+		if !removeOnlyGcs {
+			// Remove from airflow
+			if err = airflow.RemoveWorkflow(composerEnv, composerLocation, fmt.Sprintf("%v", w)); err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 

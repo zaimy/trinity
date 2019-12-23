@@ -32,9 +32,10 @@ root
 　 ├ some-workflow
 　 │ └ requirement-files
 　 ├ some-workflow.trinity
-　 └ some-module
-　 　 ├ __init__.py
-　 　 └ some-module.py
+　 ├ some-module
+　 │ ├ __init__.py
+　 │ └ some-module.py
+　 └ some-module.trinity
 ```
 
 trinity expects a structure in which a .py file representing each workflow exists directly under the dags directory.

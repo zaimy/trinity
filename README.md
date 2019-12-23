@@ -31,10 +31,14 @@ root
 　 ├ some-workflow.py
 　 ├ some-workflow
 　 │ └ requirement-files
-　 └ some-workflow.trinity
+　 ├ some-workflow.trinity
+　 └ some-module
+　 　 ├ __init__.py
+　 　 └ some-module.py
 ```
 
-trinity assumes a structure in which a .py file representing each workflow exists directly under the dags directory.
+trinity expects a structure in which a .py file representing each workflow exists directly under the dags directory.
+Local modules can be placed directly under the dags directory.
 
 ## Installation
 

@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	cloudStorage "cloud.google.com/go/storage"
@@ -20,9 +21,15 @@ func UploadWorkflow(bucket string, src string, workflow string) error {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	definitionWorkflowPath := filepath.Join(src, workflow)
-	err = filepath.Walk(definitionWorkflowPath, func(definitionPath string, info os.FileInfo, err error) error {
+	err = filepath.Walk(src, func(definitionPath string, info os.FileInfo, err error) error {
 		if info.IsDir() {
+			return nil
+		}
+
+		dirRep := fmt.Sprintf("^%s/%s/", src, workflow)
+		fileRep := fmt.Sprintf("^%s/%s\\.(py|trinity)$", src, workflow)
+		rep := regexp.MustCompile(fmt.Sprintf("%s|%s", dirRep, fileRep))
+		if !rep.MatchString(definitionPath) {
 			return nil
 		}
 

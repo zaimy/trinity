@@ -7,53 +7,78 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
+
+	mapset "github.com/deckarep/golang-set"
 )
 
 // GetHash gets a hash string of a dag from definition.
 func GetHash(src string, workflow string) (string, error) {
-	h, err := ioutil.ReadFile(filepath.Join(src, workflow, ".trinity"))
+	h, err := ioutil.ReadFile(filepath.Join(src, fmt.Sprintf("%s.trinity", workflow)))
 	if err != nil {
 		return "", err
 	}
 	return string(h), nil
 }
 
-// SaveHash saves hash value to definition.
-func SaveHash(src string) error {
-	fis, err := ioutil.ReadDir(src)
+// OverwriteAllWorkflowHashes saves hash value to definition.
+func OverwriteAllWorkflowHashes(src string) error {
+	infos, err := ioutil.ReadDir(src)
 	if err != nil {
 		return err
 	}
 
-	for _, fi := range fis {
-		if fi.IsDir() {
-			h, err := hashing(filepath.Join(src, fi.Name()))
-			if err != nil {
-				return err
-			}
+	workflows := mapset.NewSet()
 
-			file, err := os.Create(filepath.Join(src, fi.Name(), ".trinity"))
-			if err != nil {
-				return err
-			}
-			defer file.Close()
-
-			_, err = file.WriteString(fmt.Sprintf("%x", h))
-			if err != nil {
-				return err
-			}
+	rep := regexp.MustCompile(`^\w+\.py$`)
+	for _, info := range infos {
+		if rep.MatchString(info.Name()) {
+			workflow := strings.Replace(info.Name(), ".py", "", 1)
+			workflows.Add(workflow)
+		} else if info.IsDir() {
+			workflow := info.Name()
+			workflows.Add(workflow)
 		}
+	}
+
+	it := workflows.Iterator()
+	for workflow := range it.C {
+		saveHash(src, fmt.Sprintf("%s", workflow))
 	}
 
 	return nil
 }
 
-func hashing(src string) ([]byte, error) {
+func saveHash(src string, workflow string) error {
+	h, err := hashing(src, workflow)
+	if err != nil {
+		return err
+	}
+
+	trinityFile, err := os.Create(filepath.Join(src, fmt.Sprintf("%s.trinity", workflow)))
+	if err != nil {
+		return err
+	}
+	defer trinityFile.Close()
+
+	_, err = trinityFile.WriteString(fmt.Sprintf("%x", h))
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Saved hash value representing workflow: %v", workflow)
+
+	return nil
+}
+
+func hashing(src string, workflow string) ([]byte, error) {
 	var buf bytes.Buffer
 
-	if err := taring(src, &buf); err != nil {
+	if err := taring(src, workflow, &buf); err != nil {
 		return nil, err
 	}
 
@@ -63,29 +88,32 @@ func hashing(src string) ([]byte, error) {
 	return bs, nil
 }
 
-func taring(src string, buf *bytes.Buffer) error {
-	if _, err := os.Stat(src); err != nil {
-		return fmt.Errorf("%v", err.Error())
-	}
-
+func taring(src string, workflow string, buf *bytes.Buffer) error {
 	tarWriter := tar.NewWriter(buf)
 	defer tarWriter.Close()
 
-	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if !fi.Mode().IsRegular() {
+		dirRep := fmt.Sprintf("^%s/%s/", src, workflow)
+		pyRep := fmt.Sprintf("^%s/%s\\.py$", src, workflow)
+		rep := regexp.MustCompile(fmt.Sprintf("%s|%s", dirRep, pyRep))
+		if !rep.MatchString(path) {
 			return nil
 		}
 
-		if fi.Name() == ".trinity" {
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+
+		if info.Name() == ".trinity" {
 			return nil
 		}
 
 		// header
-		header, err := tar.FileInfoHeader(fi, fi.Name())
+		header, err := tar.FileInfoHeader(info, info.Name())
 		if err != nil {
 			return err
 		}
@@ -94,14 +122,14 @@ func taring(src string, buf *bytes.Buffer) error {
 		}
 
 		// body
-		f, err := os.Open(file)
+		file, err := os.Open(path)
 		if err != nil {
 			return err
 		}
-		if _, err := io.Copy(tarWriter, f); err != nil {
+		if _, err := io.Copy(tarWriter, file); err != nil {
 			return err
 		}
-		f.Close()
+		file.Close()
 
 		return nil
 	})

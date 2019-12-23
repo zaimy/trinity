@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
@@ -16,7 +17,7 @@ func GetHash(bucket string, workflow string) (string, error) {
 		return "", err
 	}
 
-	path := filepath.Join("dags", workflow, ".trinity")
+	path := filepath.Join("dags", fmt.Sprintf("%s.trinity", workflow))
 	rc, err := client.Bucket(bucket).Object(path).NewReader(ctx)
 	if err != nil {
 		return "", err

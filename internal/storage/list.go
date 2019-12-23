@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"regexp"
+	"strings"
 
 	cloudStorage "cloud.google.com/go/storage"
 	mapset "github.com/deckarep/golang-set"
@@ -18,7 +19,7 @@ func ListWorkflows(bucketName string) (mapset.Set, error) {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
-	workflowNames := mapset.NewSet()
+	workflows := mapset.NewSet()
 	it := client.Bucket(bucketName).Objects(ctx, &cloudStorage.Query{Prefix: "dags/"})
 	for {
 		attrs, err := it.Next()
@@ -28,14 +29,14 @@ func ListWorkflows(bucketName string) (mapset.Set, error) {
 		if err != nil {
 			return nil, err
 		}
-		r := regexp.MustCompile(".trinity$")
-		if r.MatchString(attrs.Name) {
-			rep := regexp.MustCompile(`\s*/\s*`)
-			result := rep.Split(attrs.Name, -1)
-			workflowNames.Add(result[1])
-			// fmt.Fprintln(os.Stdout, result[1])
+		trinityRep := regexp.MustCompile(".trinity$")
+		if trinityRep.MatchString(attrs.Name) {
+			pathRep := regexp.MustCompile(`\s*/\s*`)
+			pathElement := pathRep.Split(attrs.Name, -1)
+			workflow := strings.Replace(pathElement[1], ".trinity", "", 1)
+			workflows.Add(workflow)
 		}
 	}
 
-	return workflowNames, nil
+	return workflows, nil
 }

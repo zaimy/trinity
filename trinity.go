@@ -29,15 +29,17 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		return err
 	}
 
-	if err := definition.SaveHash(src); err != nil {
+	if err := definition.OverwriteAllWorkflowHashes(src); err != nil {
 		log.Fatal(err)
 	}
 
 	cloudStorageWorkflows, err := storage.ListWorkflows(bucket)
+	log.Printf(fmt.Sprintf("Workflows on Google Cloud Storage: %s", cloudStorageWorkflows))
 	if err != nil {
 		log.Fatal(err)
 	}
 	localStorageWorkflows, err := definition.ListWorkflows(src)
+	log.Printf(fmt.Sprintf("Workflows on local storage: %s", localStorageWorkflows))
 	if err != nil {
 		log.Fatal(err)
 	}

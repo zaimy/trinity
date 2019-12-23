@@ -16,12 +16,14 @@ func Run(args []string, outStream, errStream io.Writer) error {
 	fs := flag.NewFlagSet("trinity", flag.ContinueOnError)
 	var (
 		src              string
-		bucket           string
+		gcsDagDirectory  string
+		gcsBucket        string
 		composerEnv      string
 		composerLocation string
 	)
 	fs.StringVar(&src, "src", "dags", "dags directory")
-	fs.StringVar(&bucket, "bucket", "", "Cloud Storage bucket name")
+	fs.StringVar(&gcsBucket, "gcs-bucket", "", "Cloud Storage bucket name")
+	fs.StringVar(&gcsDagDirectory, "gcs-dag-directory", "dags", "Cloud Storage DAG directory")
 	fs.StringVar(&composerEnv, "composer-env", "", "Cloud Composer environment name")
 	fs.StringVar(&composerLocation, "composer-location", "us-central1", "Cloud Composer environment location")
 	fs.SetOutput(errStream)
@@ -29,27 +31,30 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		return err
 	}
 
+	log.Print("------------------ 01. Save hash values representing workflows ------------------")
 	if err := definition.OverwriteAllWorkflowHashes(src); err != nil {
 		log.Fatal(err)
 	}
 
-	cloudStorageWorkflows, err := storage.ListWorkflows(bucket)
-	log.Printf(fmt.Sprintf("Workflows on Google Cloud Storage: %s", cloudStorageWorkflows))
+	log.Print("------------------ 02. List workflows ------------------")
+	cloudStorageWorkflows, err := storage.ListWorkflows(gcsBucket, gcsDagDirectory)
+	log.Printf("Google Cloud Storage: %s", cloudStorageWorkflows)
 	if err != nil {
 		log.Fatal(err)
 	}
 	localStorageWorkflows, err := definition.ListWorkflows(src)
-	log.Printf(fmt.Sprintf("Workflows on local storage: %s", localStorageWorkflows))
+	log.Printf("definition: %s", localStorageWorkflows)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	log.Print("------------------ 03. Compare workflows ------------------")
 	// Exists only definition
 	d := localStorageWorkflows.Difference(cloudStorageWorkflows)
 	it := d.Iterator()
 	for w := range it.C {
-		log.Printf("Add Workflow: %s", w)
-		if err := storage.UploadWorkflow(bucket, src, fmt.Sprintf("%v", w)); err != nil {
+		log.Printf("%s workflow exists only definition. Will Upload it.", w)
+		if err := storage.UploadWorkflow(gcsBucket, gcsDagDirectory, src, fmt.Sprintf("%v", w)); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -58,9 +63,9 @@ func Run(args []string, outStream, errStream io.Writer) error {
 	d = cloudStorageWorkflows.Difference(localStorageWorkflows)
 	it = d.Iterator()
 	for w := range it.C {
-		log.Printf("Remove Workflow: %v", w)
+		log.Printf("%s workflow exists only Google Cloud Storage. Will remove it.", w)
 		// Remove from storage
-		if err := storage.RemoveWorkflow(bucket, fmt.Sprintf("%v", w)); err != nil {
+		if err := storage.RemoveWorkflow(gcsBucket, gcsDagDirectory, fmt.Sprintf("%v", w)); err != nil {
 			log.Fatal(err)
 		}
 
@@ -80,22 +85,23 @@ func Run(args []string, outStream, errStream io.Writer) error {
 			log.Fatal(err)
 		}
 
-		storageHash, err := storage.GetHash(bucket, fmt.Sprintf("%v", w))
+		storageHash, err := storage.GetHash(gcsBucket, gcsDagDirectory, fmt.Sprintf("%v", w))
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		if definitionHash == storageHash {
 			// Do nothing
+			log.Printf("%s workflow exists both definition and Google Cloud Storage. These hash values matched. Do nothing.", w)
 		} else {
-			log.Printf("Update Workflow: %v", w)
 			// Remove from storage
-			if err := storage.RemoveWorkflow(bucket, fmt.Sprintf("%v", w)); err != nil {
+			log.Printf("%s workflow exists both definition and Google Cloud Storage. These hash values NOT matched. Will update it.", w)
+			if err := storage.RemoveWorkflow(gcsBucket, gcsDagDirectory, fmt.Sprintf("%v", w)); err != nil {
 				log.Fatal(err)
 			}
 
 			// Upload to storage
-			if err = storage.UploadWorkflow(bucket, src, fmt.Sprintf("%v", w)); err != nil {
+			if err = storage.UploadWorkflow(gcsBucket, gcsDagDirectory, src, fmt.Sprintf("%v", w)); err != nil {
 				log.Fatal(err)
 			}
 		}

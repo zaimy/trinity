@@ -10,14 +10,14 @@ import (
 )
 
 // GetHash gets a hash string of a dag from Cloud Storage.
-func GetHash(bucket string, workflow string) (string, error) {
+func GetHash(bucket string, dagDirectory string, workflow string) (string, error) {
 	ctx := context.Background()
 	client, err := cloudStorage.NewClient(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	path := filepath.Join("dags", fmt.Sprintf("%s.trinity", workflow))
+	path := filepath.Join(dagDirectory, fmt.Sprintf("%s.trinity", workflow))
 	rc, err := client.Bucket(bucket).Object(path).NewReader(ctx)
 	if err != nil {
 		return "", err

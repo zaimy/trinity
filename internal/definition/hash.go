@@ -70,7 +70,7 @@ func saveHash(src string, workflow string) error {
 		return err
 	}
 
-	log.Printf("Saved hash value representing workflow: %v", workflow)
+	log.Printf("Saved %s.trinity", workflow)
 
 	return nil
 }

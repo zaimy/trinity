@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -12,7 +13,7 @@ import (
 )
 
 // ListWorkflows lists dags on Cloud Storage.
-func ListWorkflows(bucketName string) (mapset.Set, error) {
+func ListWorkflows(bucket string, dagDirectory string) (mapset.Set, error) {
 	ctx := context.Background()
 	client, err := cloudStorage.NewClient(ctx)
 	if err != nil {
@@ -20,7 +21,8 @@ func ListWorkflows(bucketName string) (mapset.Set, error) {
 	}
 
 	workflows := mapset.NewSet()
-	it := client.Bucket(bucketName).Objects(ctx, &cloudStorage.Query{Prefix: "dags/"})
+	dagDirectoryDepth := len(strings.Split(dagDirectory, "/"))
+	it := client.Bucket(bucket).Objects(ctx, &cloudStorage.Query{Prefix: fmt.Sprintf("%s/", dagDirectory)})
 	for {
 		attrs, err := it.Next()
 		if err == iterator.Done {
@@ -31,9 +33,8 @@ func ListWorkflows(bucketName string) (mapset.Set, error) {
 		}
 		trinityRep := regexp.MustCompile(".trinity$")
 		if trinityRep.MatchString(attrs.Name) {
-			pathRep := regexp.MustCompile(`\s*/\s*`)
-			pathElement := pathRep.Split(attrs.Name, -1)
-			workflow := strings.Replace(pathElement[1], ".trinity", "", 1)
+			pathElement := strings.Split(attrs.Name, "/")
+			workflow := strings.Replace(pathElement[dagDirectoryDepth], ".trinity", "", 1)
 			workflows.Add(workflow)
 		}
 	}

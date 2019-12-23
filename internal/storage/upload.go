@@ -14,7 +14,7 @@ import (
 )
 
 // UploadWorkflow uploads a dag to Cloud Storage.
-func UploadWorkflow(bucket string, src string, workflow string) error {
+func UploadWorkflow(bucket string, dagDirectory string, src string, workflow string) error {
 	ctx := context.Background()
 	client, err := cloudStorage.NewClient(ctx)
 	if err != nil {
@@ -33,8 +33,7 @@ func UploadWorkflow(bucket string, src string, workflow string) error {
 			return nil
 		}
 
-		fmt.Fprintln(os.Stdout, definitionPath)
-		storagePath := strings.Replace(definitionPath, src, "dags", 1)
+		storagePath := strings.Replace(definitionPath, src, dagDirectory, 1)
 		wc := client.Bucket(bucket).Object(storagePath).NewWriter(ctx)
 		f, err := os.Open(definitionPath)
 		if err != nil {
@@ -48,6 +47,8 @@ func UploadWorkflow(bucket string, src string, workflow string) error {
 		if err := wc.Close(); err != nil {
 			return err
 		}
+
+		log.Printf("%s uploaded to %s", definitionPath, storagePath)
 
 		return nil
 	})

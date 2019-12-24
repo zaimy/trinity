@@ -1,4 +1,4 @@
-package definition
+package codebase
 
 import (
 	"fmt"
@@ -9,10 +9,10 @@ import (
 	mapset "github.com/deckarep/golang-set"
 )
 
-// ListWorkflows lists dags on definition.
-func ListWorkflows(src string) (mapset.Set, error) {
+// ListWorkflows lists dags.
+func ListWorkflows(dagDirectory string) (mapset.Set, error) {
 	workflows := mapset.NewSet()
-	paths, _ := filepath.Glob(fmt.Sprintf("%s/*.trinity", src)) // TODO: Consider Windows file paths
+	paths, _ := filepath.Glob(fmt.Sprintf("%s/*.trinity", dagDirectory)) // TODO: Consider Windows file paths
 	for _, path := range paths {
 		rep := regexp.MustCompile(`\s*/\s*`)
 		pathElement := rep.Split(path, -1)

@@ -1,4 +1,4 @@
-package definition
+package codebase
 
 import (
 	"archive/tar"
@@ -16,18 +16,18 @@ import (
 	mapset "github.com/deckarep/golang-set"
 )
 
-// GetHash gets a hash string of a dag from definition.
-func GetHash(src string, workflow string) (string, error) {
-	h, err := ioutil.ReadFile(filepath.Join(src, fmt.Sprintf("%s.trinity", workflow)))
+// GetHash gets a hash string of a dag.
+func GetHash(dagDirectory string, workflow string) (string, error) {
+	h, err := ioutil.ReadFile(filepath.Join(dagDirectory, fmt.Sprintf("%s.trinity", workflow)))
 	if err != nil {
 		return "", err
 	}
 	return string(h), nil
 }
 
-// OverwriteAllWorkflowHashes saves hash value to definition.
-func OverwriteAllWorkflowHashes(src string) error {
-	infos, err := ioutil.ReadDir(src)
+// SaveAllWorkflowHashes saves hash value to .trinity files.
+func SaveAllWorkflowHashes(dagDirectory string) error {
+	infos, err := ioutil.ReadDir(dagDirectory)
 	if err != nil {
 		return err
 	}
@@ -47,19 +47,19 @@ func OverwriteAllWorkflowHashes(src string) error {
 
 	it := workflows.Iterator()
 	for workflow := range it.C {
-		saveHash(src, fmt.Sprintf("%s", workflow))
+		saveHash(dagDirectory, fmt.Sprintf("%s", workflow))
 	}
 
 	return nil
 }
 
-func saveHash(src string, workflow string) error {
-	h, err := hashing(src, workflow)
+func saveHash(dagDirectory string, workflow string) error {
+	h, err := hashing(dagDirectory, workflow)
 	if err != nil {
 		return err
 	}
 
-	trinityFile, err := os.Create(filepath.Join(src, fmt.Sprintf("%s.trinity", workflow)))
+	trinityFile, err := os.Create(filepath.Join(dagDirectory, fmt.Sprintf("%s.trinity", workflow)))
 	if err != nil {
 		return err
 	}
@@ -75,10 +75,10 @@ func saveHash(src string, workflow string) error {
 	return nil
 }
 
-func hashing(src string, workflow string) ([]byte, error) {
+func hashing(dagDirectory string, workflow string) ([]byte, error) {
 	var buf bytes.Buffer
 
-	if err := taring(src, workflow, &buf); err != nil {
+	if err := taring(dagDirectory, workflow, &buf); err != nil {
 		return nil, err
 	}
 
@@ -88,17 +88,17 @@ func hashing(src string, workflow string) ([]byte, error) {
 	return bs, nil
 }
 
-func taring(src string, workflow string, buf *bytes.Buffer) error {
+func taring(dagDirectory string, workflow string, buf *bytes.Buffer) error {
 	tarWriter := tar.NewWriter(buf)
 	defer tarWriter.Close()
 
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(dagDirectory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		dirRep := fmt.Sprintf("^%s/%s/", src, workflow)
-		pyRep := fmt.Sprintf("^%s/%s\\.py$", src, workflow)
+		dirRep := fmt.Sprintf("^%s/%s/", dagDirectory, workflow)
+		pyRep := fmt.Sprintf("^%s/%s\\.py$", dagDirectory, workflow)
 		rep := regexp.MustCompile(fmt.Sprintf("%s|%s", dirRep, pyRep))
 		if !rep.MatchString(path) {
 			return nil

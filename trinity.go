@@ -9,9 +9,9 @@ import (
 
 	mapset "github.com/deckarep/golang-set"
 
-	"github.com/zaimy/trinity/internal/airflow"
-	"github.com/zaimy/trinity/internal/definition"
-	"github.com/zaimy/trinity/internal/storage"
+	airflow "github.com/zaimy/trinity/internal/cloud-composer"
+	storage "github.com/zaimy/trinity/internal/cloud-storage"
+	definition "github.com/zaimy/trinity/internal/codebase"
 )
 
 // Run runs the trinity.

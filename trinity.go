@@ -50,19 +50,19 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		}
 	}
 
-	log.Print("------------------ List workflows ------------------")
-	cloudStorageWorkflows, err := storage.ListWorkflows(cloudStorageBucket, cloudStorageDagDirectory)
-	log.Printf("Cloud Storage: %s", cloudStorageWorkflows)
-	if err != nil {
-		log.Fatal(err)
-	}
-	codebaseWorkflow, err := codebase.ListWorkflows(codebaseDagDirectory)
-	log.Printf("Codebase: %s", codebaseWorkflow)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	if syncCloudStorage {
+		log.Print("------------------ List workflows ------------------")
+		cloudStorageWorkflows, err := storage.ListWorkflows(cloudStorageBucket, cloudStorageDagDirectory)
+		log.Printf("Cloud Storage: %s", cloudStorageWorkflows)
+		if err != nil {
+			log.Fatal(err)
+		}
+		codebaseWorkflow, err := codebase.ListWorkflows(codebaseDagDirectory)
+		log.Printf("Codebase: %s", codebaseWorkflow)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		updatedWorkflows := mapset.NewSet()
 
 		log.Print("------------------ Compare workflows ------------------")

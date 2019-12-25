@@ -113,9 +113,13 @@ func taring(dagDirectory string, workflow string, buf *bytes.Buffer) error {
 		}
 
 		// header
-		header, err := tar.FileInfoHeader(info, info.Name())
+		tmpHeader, err := tar.FileInfoHeader(info, info.Name())
 		if err != nil {
 			return err
+		}
+		header := &tar.Header{
+			Name: tmpHeader.Name,
+			Size: tmpHeader.Size,
 		}
 		if err := tarWriter.WriteHeader(header); err != nil {
 			return err

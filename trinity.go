@@ -26,7 +26,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		saveHash                 bool
 		syncCloudStorage         bool
 		syncCloudComposer        bool
-		dryRun					 bool
+		dryRun                   bool
 	)
 	fs.StringVar(&codebaseDagDirectory, "codebase-dag-directory", "dags", "codebase DAG directory path")
 	fs.StringVar(&cloudStorageBucket, "cloud-storage-bucket", "", "Cloud Storage bucket name")

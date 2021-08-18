@@ -26,6 +26,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		saveHash                 bool
 		syncCloudStorage         bool
 		syncCloudComposer        bool
+		dryRun					 bool
 	)
 	fs.StringVar(&codebaseDagDirectory, "codebase-dag-directory", "dags", "codebase DAG directory path")
 	fs.StringVar(&cloudStorageBucket, "cloud-storage-bucket", "", "Cloud Storage bucket name")
@@ -35,6 +36,7 @@ func Run(args []string, outStream, errStream io.Writer) error {
 	fs.BoolVar(&saveHash, "save-hash", true, "If false, skip saving hash values to .trinity files.")
 	fs.BoolVar(&syncCloudStorage, "sync-cloud-storage", true, "If false, skip syncing with Cloud Storage.")
 	fs.BoolVar(&syncCloudComposer, "sync-cloud-composer", true, "If false, skip syncing with Cloud Composer.")
+	fs.BoolVar(&dryRun, "dry-run", false, "If true, only shows DAGs to be processed to stdout.")
 	fs.SetOutput(errStream)
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -67,9 +69,13 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		d := codebaseWorkflow.Difference(cloudStorageWorkflows)
 		it := d.Iterator()
 		for w := range it.C {
-			log.Printf("%s workflow exists only codebase. Adding...", w)
-			if err := storage.UploadWorkflow(cloudStorageBucket, cloudStorageDagDirectory, codebaseDagDirectory, fmt.Sprintf("%v", w)); err != nil {
-				log.Fatal(err)
+			if !dryRun {
+				log.Printf("%s workflow exists only codebase. Adding...", w)
+				if err := storage.UploadWorkflow(cloudStorageBucket, cloudStorageDagDirectory, codebaseDagDirectory, fmt.Sprintf("%v", w)); err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				log.Printf("%s workflow exists only codebase. (dry-run)", w)
 			}
 			updatedWorkflows.Add(w)
 		}
@@ -78,17 +84,21 @@ func Run(args []string, outStream, errStream io.Writer) error {
 		d = cloudStorageWorkflows.Difference(codebaseWorkflow)
 		it = d.Iterator()
 		for w := range it.C {
-			log.Printf("%s workflow exists only Cloud Storage. Deleting...", w)
-			// Remove from Cloud Storage
-			if err := storage.RemoveWorkflow(cloudStorageBucket, cloudStorageDagDirectory, fmt.Sprintf("%v", w)); err != nil {
-				log.Fatal(err)
-			}
-
-			if syncCloudComposer {
-				// Remove from Cloud Composer
-				if err = composer.RemoveWorkflow(cloudComposerEnvironment, cloudComposerLocation, fmt.Sprintf("%v", w)); err != nil {
+			if !dryRun {
+				log.Printf("%s workflow exists only Cloud Storage. Deleting...", w)
+				// Remove from Cloud Storage
+				if err := storage.RemoveWorkflow(cloudStorageBucket, cloudStorageDagDirectory, fmt.Sprintf("%v", w)); err != nil {
 					log.Fatal(err)
 				}
+
+				if syncCloudComposer {
+					// Remove from Cloud Composer
+					if err = composer.RemoveWorkflow(cloudComposerEnvironment, cloudComposerLocation, fmt.Sprintf("%v", w)); err != nil {
+						log.Fatal(err)
+					}
+				}
+			} else {
+				log.Printf("%s workflow exists only Cloud Storage. (dry-run)", w)
 			}
 		}
 
@@ -110,15 +120,19 @@ func Run(args []string, outStream, errStream io.Writer) error {
 			if codebaseHash == cloudStorageHash {
 				// Do nothing
 			} else {
-				// Remove from Cloud Storage
-				log.Printf("%s workflow exists both codebase and Cloud Storage. These hash values NOT matched. Updating...", w)
-				if err := storage.RemoveWorkflow(cloudStorageBucket, cloudStorageDagDirectory, fmt.Sprintf("%v", w)); err != nil {
-					log.Fatal(err)
-				}
+				if !dryRun {
+					// Remove from Cloud Storage
+					log.Printf("%s workflow exists both codebase and Cloud Storage. These hash values NOT matched. Updating...", w)
+					if err := storage.RemoveWorkflow(cloudStorageBucket, cloudStorageDagDirectory, fmt.Sprintf("%v", w)); err != nil {
+						log.Fatal(err)
+					}
 
-				// Upload to Cloud Storage
-				if err = storage.UploadWorkflow(cloudStorageBucket, cloudStorageDagDirectory, codebaseDagDirectory, fmt.Sprintf("%v", w)); err != nil {
-					log.Fatal(err)
+					// Upload to Cloud Storage
+					if err = storage.UploadWorkflow(cloudStorageBucket, cloudStorageDagDirectory, codebaseDagDirectory, fmt.Sprintf("%v", w)); err != nil {
+						log.Fatal(err)
+					}
+				} else {
+					log.Printf("%s workflow exists both codebase and Cloud Storage. These hash values NOT matched. (dry-run)", w)
 				}
 				updatedWorkflows.Add(w)
 			}

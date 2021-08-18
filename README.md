@@ -23,7 +23,7 @@ trinity synchronizes the workflows (DAGs) with the codebase as master.
 
 *When trinity is executed, a hash value representing the workflow definition is written to .trinity. This file does not need to be under version control.
 
-## Directory Stracture
+## Directory Structure
 
 ```txt
 root
